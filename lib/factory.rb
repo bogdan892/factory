@@ -21,7 +21,6 @@ class Factory
           map_variables == other.map_variables
         end
 
-
         def [](val)
           val = val.to_s if val.is_a?(Symbol)
           val.is_a?(String) ? instance_variable_get("@#{val}") : map_variables[val]
@@ -32,7 +31,7 @@ class Factory
         end
 
         def map_variables
-          instance_variables.map { |x| instance_variable_get(x) }
+          instance_variables.map { |variable| instance_variable_get(variable) }
         end
 
         def each(&block)
@@ -40,8 +39,9 @@ class Factory
         end
 
         def each_pair(&block)
-          a ='1','2','3'
-          instance_variables.zip(a).each_pair{|x| p x}
+          instance_variables.map do |variable|
+            [variable.to_s.delete('@'), instance_variable_get(variable)]
+          end.to_h.each(&block)
         end
 
         def to_a
@@ -61,8 +61,18 @@ class Factory
           # map_variables.each_with_index{ |key,value| }
         end
 
+        def dig(*values)
+          a =  self
+          values.each do |key|
+            return nil if a[key].nil?
+
+            a = a[key]
+          end
+          a
+        end
+
         def members
-          instance_variables.map {|variables| variables.to_s.delete('@').to_sym}
+          instance_variables.map { |variables| variables.to_s.delete('@').to_sym }
         end
         alias_method :size, :length
         class_eval(&block) if block_given?
@@ -70,36 +80,3 @@ class Factory
     end
   end
 end
-
-Customer = Factory.new(:name, :address, :zip)
-
-joe = Customer.new('Joe Smith', '123 Maple, Anytown NC', 12_345)
-p joe.members
-
-# Customer = Factory.new(:name, :address, :zip)
-#
-#  joe = Customer.new('Joe Smith', '123 Maple, Anytown NC', 12_345)
-# p joe.values_at(1,2)
-
-
-# each_elements = []
-#
-# p joe.each_pair
-# p each_elements
-# Customer = Factory.new( :name, :address,:zip) do
-#   def greeting
-#     "Hello #{name}!"
-#   end
-# end
-# # customer = Customer.new('Dave1', '123 Main1')
-# customer2 = Customer.new('Dave', '123 Main')
-# p customer == (customer2)
-#
-# Customer = Factory.new(:name, :address, :zip)
-#
-# joe = Customer.new('Joe Smith', '123 Maple, Anytown NC', 12_345)
-#
-# p joe['name']
-# joe[:name] = 'name'
-# p joe['name']
-# # p joe[0]x
