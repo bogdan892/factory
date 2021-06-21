@@ -59,7 +59,6 @@ class Factory
 
         def values_at(*values)
           values.map { |key| map_variables.at(key) }
-          # map_variables.each_with_index{ |key,value| }
         end
 
         def dig(*values)
@@ -80,4 +79,3 @@ class Factory
       end
     end
   end
-end
