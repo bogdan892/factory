@@ -17,6 +17,10 @@ class Factory
           fields.each_index { |index| instance_variable_set("@#{fields[index]}", arg[index]) }
         end
 
+        define_method :fields do
+          fields
+        end
+
         def ==(other)
           map_variables == other.map_variables
         end
@@ -39,13 +43,11 @@ class Factory
         end
 
         def each_pair(&block)
-          instance_variables.map do |variable|
-            [variable.to_s.delete('@'), instance_variable_get(variable)]
-          end.to_h.each(&block)
+          to_h.each(&block)
         end
 
-        def to_a
-          map_variables
+        def to_h
+          fields.zip(map_variables).to_h
         end
 
         def select(&block)
@@ -60,20 +62,16 @@ class Factory
           values.map { |key| map_variables.at(key) }
         end
 
-        def dig(*values)
-          a =  self
-          values.each do |key|
-            return nil if a[key].nil?
+        def dig(*args)
+          args.reduce(to_h) do |hash, arg|
+            return unless hash[arg]
 
-            a = a[key]
+            hash[arg]
           end
-          a
-        end
-
-        def members
-          instance_variables.map { |variables| variables.to_s.delete('@').to_sym }
         end
         alias_method :size, :length
+        alias_method :members, :fields
+        alias_method :to_a, :map_variables
         class_eval(&block) if block_given?
       end
     end
